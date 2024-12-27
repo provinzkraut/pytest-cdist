@@ -8,3 +8,20 @@ dependencies = [
     "pytest>=7",
 ]
 
+[dependency-groups]
+dev = [
+    "ruff>=0.8.4",
+    "pytest-xdist>=3.6.1",
+    "mypy>=1.14.0",
+]
+
+[project.entry-points.pytest11]
+pytest_cdist = "pytest_cdist.plugin"
+
+[project.scripts]
+pytest_cdist_check = "pytest_cdist.check:main"
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

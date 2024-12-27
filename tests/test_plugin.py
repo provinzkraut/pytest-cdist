@@ -1,0 +1,135 @@
+import json
+
+import pytest
+
+
+def test_split_simple(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+        
+    def test_two():
+        assert False
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/2")
+    result.assert_outcomes(passed=1, deselected=1)
+
+    result = pytester.runpytest("--cdist-group=2/2")
+    result.assert_outcomes(failed=1, deselected=1)
+
+
+def test_split_with_preselect(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+
+    def test_two():
+        assert False
+        
+    def test_three():
+        assert True
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/2", "-k", "two")
+    result.assert_outcomes(failed=1, deselected=2)
+
+    result = pytester.runpytest("--cdist-group=2/2", "-k", "two")
+    result.assert_outcomes(passed=0, deselected=3)
+
+
+def test_justify_file(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+        
+    def test_two():
+        assert True
+        
+    def test_three():
+        assert True
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/2", "--cdist-justify-items=file")
+    result.assert_outcomes(passed=3)
+    result = pytester.runpytest("--cdist-group=2/2", "--cdist-justify-items=file")
+    result.assert_outcomes(passed=0, deselected=3)
+
+
+def test_justify_scope(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    class TestSomething:
+        def test_one(self):
+            assert True
+    
+        def test_two(self):
+            assert True
+    
+    class TestSomethingElse:
+        def test_three(self):
+            assert True
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/2", "--cdist-justify-items=scope")
+    result.assert_outcomes(passed=2, deselected=1)
+    result = pytester.runpytest("--cdist-group=2/2", "--cdist-justify-items=scope")
+    result.assert_outcomes(passed=1, deselected=2)
+
+
+def test_justify_xdist_groups(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    import pytest
+    @pytest.mark.xdist_group("one")
+    def test_one():
+        assert True
+
+    @pytest.mark.xdist_group("one")
+    def test_two():
+        assert True
+
+    @pytest.mark.xdist_group("one")
+    def test_three():
+        assert True
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/2", "-n", "2")
+    result.assert_outcomes(passed=3)
+    result = pytester.runpytest("--cdist-group=2/2", "-n", "2")
+    # don't assert "deselect" here since it doesn't work properly with xdist
+    result.assert_outcomes(passed=0)
+
+
+def test_report(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+
+    def test_two():
+        assert True
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/2", "--cdist-report")
+    result.assert_outcomes(passed=1, deselected=1)
+
+    result = pytester.runpytest("--cdist-group=2/2", "--cdist-report")
+    result.assert_outcomes(passed=1, deselected=1)
+
+    report_file_1 = pytester.path / "pytest_cdist_report_1.json"
+    report_file_2 = pytester.path / "pytest_cdist_report_2.json"
+
+    assert report_file_1.exists()
+    assert report_file_2.exists()
+
+    assert json.loads(report_file_1.read_text()) == {
+        "group": 1,
+        "total_groups": 2,
+        "collected": ["test_report.py::test_one", "test_report.py::test_two"],
+        "selected": ["test_report.py::test_one"],
+    }
+
+    assert json.loads(report_file_2.read_text()) == {
+        "group": 2,
+        "total_groups": 2,
+        "collected": ["test_report.py::test_one", "test_report.py::test_two"],
+        "selected": ["test_report.py::test_two"],
+    }
