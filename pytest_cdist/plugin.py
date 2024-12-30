@@ -113,7 +113,7 @@ def _justify_xdist_groups(groups: list[list[pytest.Item]]) -> list[list[pytest.I
 
     # ensure that we do not break up xdist groups
     for xdist_group, xdist_grouped_items in xdist_groups.items():
-        min(groups).extend(xdist_grouped_items)
+        min(groups, key=len).extend(xdist_grouped_items)
 
     return groups
 
@@ -145,8 +145,8 @@ def pytest_collection_modifyitems(
     if justify_items_strategy != "none":
         groups = _justify_items(groups, strategy=justify_items_strategy)
 
-    if os.getenv("PYTEST_XDIST_WORKER"):
-        groups = _justify_xdist_groups(groups)
+    # if os.getenv("PYTEST_XDIST_WORKER"):
+    groups = _justify_xdist_groups(groups)
 
     if group_steal is not None:
         target_group, amount_to_steal = group_steal
