@@ -18,6 +18,13 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--cdist-report-dir", action="store", default=".", type=pathlib.Path
     )
     group.addoption("--cdist-justify-items", action="store", default="none")
+    group.addoption(
+        "--cdist-group-steal",
+        action="store",
+        default=None,
+        help="make a group steal a percentage of items from other groups. '1:30' would "
+        "make group 1 steal 30 % of items from all other groups)",
+    )
 
 
 def _partition_list(items: list[T], chunk_size: int) -> list[list[T]]:
@@ -41,6 +48,26 @@ def _get_item_scope(item: pytest.Item) -> str:
 
 def _get_item_file(item: pytest.Item) -> str:
     return item.nodeid.split("::", 1)[0]
+
+
+def _distribute_with_bias(
+    groups: list[list[pytest.Item]], target: int, bias: int
+) -> list[list[pytest.Item]]:
+    for i, lst in enumerate(groups):
+        if i != target:
+            num_items_to_move = max(0, min(len(lst), (len(lst) * bias) // 100))
+            items_to_move = lst[:num_items_to_move]
+            groups[target].extend(items_to_move)
+            groups[i] = lst[num_items_to_move:]
+
+    return groups
+
+
+def _get_group_steal_opt(opt: str | None) -> tuple[int, int] | None:
+    if opt is None:
+        return None
+    target_group, amount_to_steal = opt.split(":")
+    return int(target_group) - 1, int(amount_to_steal)
 
 
 def _justify_items(
@@ -104,6 +131,7 @@ def pytest_collection_modifyitems(
     justify_items_strategy: Literal["none", "file", "scope"] = config.getoption(
         "cdist_justify_items"
     )
+    group_steal = _get_group_steal_opt(config.getoption("cdist_group_steal"))
 
     current_group, total_groups = map(int, cdist_option.split("/"))
     if not 0 < current_group <= total_groups:
@@ -119,6 +147,14 @@ def pytest_collection_modifyitems(
 
     if os.getenv("PYTEST_XDIST_WORKER"):
         groups = _justify_xdist_groups(groups)
+
+    if group_steal is not None:
+        target_group, amount_to_steal = group_steal
+        groups = _distribute_with_bias(
+            groups,
+            target=target_group,
+            bias=amount_to_steal,
+        )
 
     new_items = groups.pop(current_group)
     deselect = [item for group in groups for item in group]

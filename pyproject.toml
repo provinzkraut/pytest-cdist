@@ -19,7 +19,7 @@ dev = [
 pytest_cdist = "pytest_cdist.plugin"
 
 [project.scripts]
-pytest_cdist_check = "pytest_cdist.check:main"
+pytest-cdist-check = "pytest_cdist.check:main"
 
 
 [build-system]

@@ -133,3 +133,25 @@ def test_report(pytester: pytest.Pytester) -> None:
         "collected": ["test_report.py::test_one", "test_report.py::test_two"],
         "selected": ["test_report.py::test_two"],
     }
+
+
+def test_steal(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+
+    def test_two():
+        assert True
+        
+    def test_three():
+        assert True
+        
+    def test_four():
+        assert True
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/2", "--cdist-group-steal=2:50")
+    result.assert_outcomes(passed=1, deselected=3)
+
+    result = pytester.runpytest("--cdist-group=2/2", "--cdist-group-steal=2:50")
+    result.assert_outcomes(passed=3, deselected=1)
