@@ -1,6 +1,5 @@
 import collections
 import json
-import os
 import pathlib
 from typing import TypeVar, Literal
 

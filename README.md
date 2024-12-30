@@ -6,12 +6,12 @@ Like pytest-xdist, but for distributed environments.
 
 ## Why?
 
-pytest-xdist can help to parallelize test execution, as long as you can scale 
+pytest-xdist can help to parallelize test execution, as long as you can scale
 horizontally. In many environments, such as GitHub actions with GitHub runners, this is
 only possible to a fairly limited degree, which can be an issue if your test suite grows
 large. pytest-cdist can help with this by allowing to execute individual chunks of your
 test suite in a deterministic order, so you can use multiple concurrent jobs to run each
-individual chunk. 
+individual chunk.
 
 The individual invocation can *still* make use of pytest-xdist.
 

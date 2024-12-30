@@ -7,7 +7,7 @@ def test_split_simple(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     def test_one():
         assert True
-        
+
     def test_two():
         assert False
     """)
@@ -26,7 +26,7 @@ def test_split_with_preselect(pytester: pytest.Pytester) -> None:
 
     def test_two():
         assert False
-        
+
     def test_three():
         assert True
     """)
@@ -42,10 +42,10 @@ def test_justify_file(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     def test_one():
         assert True
-        
+
     def test_two():
         assert True
-        
+
     def test_three():
         assert True
     """)
@@ -61,10 +61,10 @@ def test_justify_scope(pytester: pytest.Pytester) -> None:
     class TestSomething:
         def test_one(self):
             assert True
-    
+
         def test_two(self):
             assert True
-    
+
     class TestSomethingElse:
         def test_three(self):
             assert True
@@ -79,10 +79,10 @@ def test_justify_scope(pytester: pytest.Pytester) -> None:
 def test_justify_xdist_groups(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     import pytest
-    
+
     def test_no_group():
         pass
-    
+
     @pytest.mark.xdist_group("one")
     def test_one():
         assert True
@@ -146,10 +146,10 @@ def test_steal(pytester: pytest.Pytester) -> None:
 
     def test_two():
         assert True
-        
+
     def test_three():
         assert True
-        
+
     def test_four():
         assert True
     """)
