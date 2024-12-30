@@ -1,9 +1,10 @@
-name: CI
+name: Test
 on:
   pull_request:
   push:
     branches:
       - main
+      -
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -22,6 +23,7 @@ jobs:
           key: pre-commit|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Execute Pre-Commit
         run: pre-commit run --show-diff-on-failure --color=always --all-files
+
   test:
     strategy:
       fail-fast: true
@@ -46,5 +48,5 @@ jobs:
         run: uv sync
       - name: Test
         run: uv run pytest
-      - mypy:
+      - name: Mypy
         run: uv run mypy
