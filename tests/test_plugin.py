@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 import pytest
@@ -7,7 +9,7 @@ def test_split_simple(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     def test_one():
         assert True
-        
+
     def test_two():
         assert False
     """)
@@ -26,7 +28,7 @@ def test_split_with_preselect(pytester: pytest.Pytester) -> None:
 
     def test_two():
         assert False
-        
+
     def test_three():
         assert True
     """)
@@ -42,10 +44,10 @@ def test_justify_file(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     def test_one():
         assert True
-        
+
     def test_two():
         assert True
-        
+
     def test_three():
         assert True
     """)
@@ -61,10 +63,10 @@ def test_justify_scope(pytester: pytest.Pytester) -> None:
     class TestSomething:
         def test_one(self):
             assert True
-    
+
         def test_two(self):
             assert True
-    
+
     class TestSomethingElse:
         def test_three(self):
             assert True
@@ -79,6 +81,10 @@ def test_justify_scope(pytester: pytest.Pytester) -> None:
 def test_justify_xdist_groups(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     import pytest
+
+    def test_no_group():
+        pass
+
     @pytest.mark.xdist_group("one")
     def test_one():
         assert True
@@ -87,16 +93,16 @@ def test_justify_xdist_groups(pytester: pytest.Pytester) -> None:
     def test_two():
         assert True
 
-    @pytest.mark.xdist_group("one")
+    @pytest.mark.xdist_group("two")
     def test_three():
         assert True
     """)
 
     result = pytester.runpytest("--cdist-group=1/2", "-n", "2")
-    result.assert_outcomes(passed=3)
+    result.assert_outcomes(passed=2)
     result = pytester.runpytest("--cdist-group=2/2", "-n", "2")
     # don't assert "deselect" here since it doesn't work properly with xdist
-    result.assert_outcomes(passed=0)
+    result.assert_outcomes(passed=2)
 
 
 def test_report(pytester: pytest.Pytester) -> None:
@@ -142,10 +148,10 @@ def test_steal(pytester: pytest.Pytester) -> None:
 
     def test_two():
         assert True
-        
+
     def test_three():
         assert True
-        
+
     def test_four():
         assert True
     """)
