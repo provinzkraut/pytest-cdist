@@ -25,7 +25,7 @@ jobs:
         run: pre-commit run --show-diff-on-failure --color=always --all-files
 
   test:
-    name: Python ${{matrix.python-version}} / Pytest ${{matrix.pytest-version}}
+    name: Python ${{matrix.python-version}} + Pytest ${{matrix.pytest-version}}
     strategy:
       fail-fast: true
       matrix:
