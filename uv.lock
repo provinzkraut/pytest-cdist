@@ -192,7 +192,7 @@ wheels = [
 
 [[package]]
 name = "pytest-cdist"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "pytest" },
@@ -204,6 +204,7 @@ dev = [
     { name = "pre-commit" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata]
@@ -215,6 +216,7 @@ dev = [
     { name = "pre-commit", specifier = ">=4.0.1" },
     { name = "pytest-xdist", specifier = ">=3.6.1" },
     { name = "ruff", specifier = ">=0.8.4" },
+    { name = "typing-extensions", specifier = ">=4.12.2" },
 ]
 
 [[package]]
