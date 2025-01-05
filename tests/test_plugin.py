@@ -78,6 +78,36 @@ def test_justify_scope(pytester: pytest.Pytester) -> None:
     result.assert_outcomes(passed=1, deselected=2)
 
 
+@pytest.mark.parametrize(
+    "cli_opt, ini_opt",
+    [
+        ("--cdist-justify-items=file", None),
+        ("--cdist-justify-items=file", "cdist-justify-items=none"),
+        ("", "cdist-justify-items=file"),
+    ],
+)
+def test_justify_cli_ini_cfg(
+    pytester: pytest.Pytester, cli_opt: str, ini_opt: str | None
+) -> None:
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+
+    def test_two():
+        assert True
+
+    def test_three():
+        assert True
+    """)
+    if ini_opt is not None:
+        pytester.makeini(f"[pytest]\n{ini_opt}")
+
+    result = pytester.runpytest("--cdist-group=1/2", cli_opt)
+    result.assert_outcomes(passed=3)
+    result = pytester.runpytest("--cdist-group=2/2", cli_opt)
+    result.assert_outcomes(passed=0, deselected=3)
+
+
 def test_justify_xdist_groups(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     import pytest
@@ -141,7 +171,15 @@ def test_report(pytester: pytest.Pytester) -> None:
     }
 
 
-def test_steal(pytester: pytest.Pytester) -> None:
+@pytest.mark.parametrize(
+    "cli_opt, ini_opt",
+    [
+        ("--cdist-group-steal=2:50", None),
+        ("", "cdist-group-steal=2:50"),
+        ("--cdist-group-steal=2:50", "cdist-group-steal=2:50"),
+    ],
+)
+def test_steal(pytester: pytest.Pytester, cli_opt: str, ini_opt: str | None) -> None:
     pytester.makepyfile("""
     def test_one():
         assert True
@@ -156,8 +194,11 @@ def test_steal(pytester: pytest.Pytester) -> None:
         assert True
     """)
 
-    result = pytester.runpytest("--cdist-group=1/2", "--cdist-group-steal=2:50")
+    if ini_opt is not None:
+        pytester.makeini(f"[pytest]\n{ini_opt}")
+
+    result = pytester.runpytest("--cdist-group=1/2", cli_opt)
     result.assert_outcomes(passed=1, deselected=3)
 
-    result = pytester.runpytest("--cdist-group=2/2", "--cdist-group-steal=2:50")
+    result = pytester.runpytest("--cdist-group=2/2", cli_opt)
     result.assert_outcomes(passed=3, deselected=1)
