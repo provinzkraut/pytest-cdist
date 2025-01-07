@@ -167,7 +167,9 @@ class CdistConfig:
         ) or config.getini("cdist-justify-items")
 
         group_steal = _get_group_steal_opt(
-            config.getoption("cdist_group_steal") or config.getini("cdist-group-steal")
+            config.getoption("cdist_group_steal")
+            or config.getini("cdist-group-steal")
+            or None  # pytest<8 returns an empty string here
         )
 
         current_group, total_groups = map(int, cdist_option.split("/"))
