@@ -1,6 +1,7 @@
 # pytest-cdist
 
-Like pytest-xdist, but for distributed environments.
+Like pytest-xdist, but for distributed environments - pytest-cdist allows to split a 
+test suite into multiple parts and run them independently.
 
 **This is a work in progress**
 
@@ -12,8 +13,6 @@ only possible to a fairly limited degree, which can be an issue if your test sui
 large. pytest-cdist can help with this by allowing to execute individual chunks of your
 test suite in a deterministic order, so you can use multiple concurrent jobs to run each
 individual chunk.
-
-The individual invocation can *still* make use of pytest-xdist.
 
 
 ## How?
@@ -105,5 +104,56 @@ When running under pytest-xdist, pytest-cdist will honour tests marked with
 
 ### With pytest-randomly
 
-At the moment, pytest-cdist does not work out of the box with pytest randomly's test
-reordering, unless an explicit seed is passed
+To use pytest-cdist with 
+[pytest-randomly](https://github.com/pytest-dev/pytest-randomly)'s test reordering, a 
+randomness seed that's consistent across the different pytest 
+invocations needs to be specified, otherwise, test cases would be dropped, since 
+pytest-cdist has to rely on a consistent collection order to split test cases among its
+groups.
+
+To achieve this, a random source such as the current timestamp can be used:
+
+```yaml
+jobs:
+  setup_randomly_seed:
+    runs-on: ubuntu-latest
+    outputs:
+      randomly_seed: ${{ steps.set-seed.outputs.randomly_seed }}
+    steps:
+      - name: Set seed
+        id: set-seed
+        run: echo "randomly_seed=$(date +%s)" >> $GITHUB_OUTPUT
+        
+  test:
+    runs-on: ubuntu-latest
+    needs: setup_randomly_seed
+    matrix:
+      strategy:
+        cdist-groups: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run pytest
+        run: > 
+          pytest 
+          --cdist-group=${{ matrix.cdist-group }}/4 
+          --randomly-seed=${{ needs.setup_randomly_seeds.outputs.randomly_seed }}
+```
+
+or a bit simpler (but less random), using the current git hash:
+
+```yaml
+jobs:        
+  test:
+    runs-on: ubuntu-latest
+    needs: setup_randomly_seed
+    matrix:
+      strategy:
+        cdist-groups: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run pytest
+        run: > 
+          pytest 
+          --cdist-group=${{ matrix.cdist-group }}/4 
+          --randomly-seed=$((16#$(git rev-parse HEAD)))
+```
