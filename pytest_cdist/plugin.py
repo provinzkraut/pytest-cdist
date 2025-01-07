@@ -213,6 +213,17 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def pytest_configure(config: pytest.Config) -> None:
     cdist_config = CdistConfig.from_pytest_config(config)
     config.stash[_CDIST_CONFIG_KEY] = cdist_config
+    if (
+        config.pluginmanager.hasplugin("randomly")
+        and config.getoption("randomly_seed") == "default"
+        and config.getoption("randomly_reorganize")
+    ):
+        raise pytest.UsageError(
+            "pytest-cdist is incompatible with the current pytest-randomly "
+            "configuration and will produce incorrect results. To use both of them "
+            "together, either specify a randomness seed using '--randomly-seed=...' or "
+            "disable test reorganization by passing '--randomly-dont-reorganize'."
+        )
 
 
 def pytest_collection_modifyitems(

@@ -1,7 +1,10 @@
 [project]
 name = "pytest-cdist"
-version = "0.2.0"
-description = "Add your description here"
+version = "0.3.0"
+description = "A pytest plugin to split your test suite into multiple parts"
+authors = [
+  { name = "Janek Nouvertné", email = "provinzkraut@posteo.de" },
+]
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
@@ -32,6 +35,7 @@ dev = [
     "mypy>=1.14.0",
     "pre-commit>=4.0.1",
     "typing-extensions>=4.12.2",
+    "pytest-randomly>=3.16.0",
 ]
 
 [project.entry-points.pytest11]
@@ -52,3 +56,7 @@ packages = ["pytest_cdist", "tests"]
 
 [tool.ruff]
 target-version = "py39"
+
+
+[tool.pytest.ini_options]
+addopts = "-p no:randomly"

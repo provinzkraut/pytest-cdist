@@ -87,7 +87,10 @@ def test_justify_scope(pytester: pytest.Pytester) -> None:
     ],
 )
 def test_justify_cli_ini_cfg(
-    pytester: pytest.Pytester, cli_opt: str, ini_opt: str | None
+    pytester: pytest.Pytester,
+    cli_opt: str,
+    ini_opt: str | None,
+    ini_tpl: str,
 ) -> None:
     pytester.makepyfile("""
     def test_one():
@@ -100,7 +103,7 @@ def test_justify_cli_ini_cfg(
         assert True
     """)
     if ini_opt is not None:
-        pytester.makeini(f"[pytest]\n{ini_opt}")
+        pytester.makeini(ini_tpl + f"\n{ini_opt}")
 
     result = pytester.runpytest("--cdist-group=1/2", cli_opt)
     result.assert_outcomes(passed=3)
@@ -179,7 +182,9 @@ def test_report(pytester: pytest.Pytester) -> None:
         ("--cdist-group-steal=2:50", "cdist-group-steal=2:50"),
     ],
 )
-def test_steal(pytester: pytest.Pytester, cli_opt: str, ini_opt: str | None) -> None:
+def test_steal(
+    pytester: pytest.Pytester, cli_opt: str, ini_opt: str | None, ini_tpl: str
+) -> None:
     pytester.makepyfile("""
     def test_one():
         assert True
@@ -195,10 +200,64 @@ def test_steal(pytester: pytest.Pytester, cli_opt: str, ini_opt: str | None) -> 
     """)
 
     if ini_opt is not None:
-        pytester.makeini(f"[pytest]\n{ini_opt}")
+        pytester.makeini(ini_tpl + f"\n{ini_opt}")
 
     result = pytester.runpytest("--cdist-group=1/2", cli_opt)
     result.assert_outcomes(passed=1, deselected=3)
 
     result = pytester.runpytest("--cdist-group=2/2", cli_opt)
     result.assert_outcomes(passed=3, deselected=1)
+
+
+def test_raises_for_invalid_randomly_cfg(pytester: pytest.Pytester) -> None:
+    pytester.makeini("")
+
+    result = pytester.runpytest("--cdist-group=1/2")
+    assert (
+        "pytest-cdist is incompatible with the current pytest-randomly configuration"
+        in result.stderr.str()
+    )
+
+
+@pytest.mark.parametrize("i", range(10))
+def test_randomly_with_seed(pytester: pytest.Pytester, i: int) -> None:
+    pytester.makeini("")
+
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+
+    def test_two():
+        assert True
+
+    def test_three():
+        assert False
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/2", "--randomly-seed=123")
+    result.assert_outcomes(passed=1, failed=1, deselected=1)
+
+    result = pytester.runpytest("--cdist-group=2/2", "--randomly-seed=123")
+    result.assert_outcomes(passed=1, failed=0, deselected=2)
+
+
+@pytest.mark.parametrize("i", range(10))
+def test_randomly_with_dont_reorganize(pytester: pytest.Pytester, i: int) -> None:
+    pytester.makeini("")
+
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+
+    def test_two():
+        assert True
+
+    def test_three():
+        assert False
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/2", "--randomly-dont-reorganize")
+    result.assert_outcomes(passed=2, failed=0, deselected=1)
+
+    result = pytester.runpytest("--cdist-group=2/2", "--randomly-dont-reorganize")
+    result.assert_outcomes(passed=0, failed=1, deselected=2)
