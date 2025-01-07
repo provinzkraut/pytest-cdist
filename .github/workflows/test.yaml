@@ -51,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync
-          uv pip install pytest=="${{matrix.pytest-version}}"
+          uv pip install pytest~="${{matrix.pytest-version}}.0"
       - name: Test
         run: uv run --no-sync pytest
 
