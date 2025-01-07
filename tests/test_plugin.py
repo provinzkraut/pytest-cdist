@@ -221,7 +221,7 @@ def test_raises_for_invalid_randomly_cfg(pytester: pytest.Pytester) -> None:
 
 @pytest.mark.parametrize("i", range(10))
 def test_randomly_with_seed(pytester: pytest.Pytester, i: int) -> None:
-    pytester.makeini("")
+    pytester.makeini('[pytest]\naddopts="-p randomly"')
 
     pytester.makepyfile("""
     def test_one():
@@ -243,7 +243,7 @@ def test_randomly_with_seed(pytester: pytest.Pytester, i: int) -> None:
 
 @pytest.mark.parametrize("i", range(10))
 def test_randomly_with_dont_reorganize(pytester: pytest.Pytester, i: int) -> None:
-    pytester.makeini("")
+    pytester.makeini('[pytest]\naddopts="-p randomly"')
 
     pytester.makepyfile("""
     def test_one():
