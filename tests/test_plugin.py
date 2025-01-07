@@ -234,10 +234,10 @@ def test_randomly_with_seed(pytester: pytest.Pytester, i: int) -> None:
         assert False
     """)
 
-    result = pytester.runpytest("--cdist-group=1/2", "--randomly-seed=123")
+    result = pytester.runpytest_subprocess("--cdist-group=1/2", "--randomly-seed=123")
     result.assert_outcomes(passed=1, failed=1, deselected=1)
 
-    result = pytester.runpytest("--cdist-group=2/2", "--randomly-seed=123")
+    result = pytester.runpytest_subprocess("--cdist-group=2/2", "--randomly-seed=123")
     result.assert_outcomes(passed=1, failed=0, deselected=2)
 
 
@@ -256,8 +256,12 @@ def test_randomly_with_dont_reorganize(pytester: pytest.Pytester, i: int) -> Non
         assert False
     """)
 
-    result = pytester.runpytest("--cdist-group=1/2", "--randomly-dont-reorganize")
+    result = pytester.runpytest_subprocess(
+        "--cdist-group=1/2", "--randomly-dont-reorganize"
+    )
     result.assert_outcomes(passed=2, failed=0, deselected=1)
 
-    result = pytester.runpytest("--cdist-group=2/2", "--randomly-dont-reorganize")
+    result = pytester.runpytest_subprocess(
+        "--cdist-group=2/2", "--randomly-dont-reorganize"
+    )
     result.assert_outcomes(passed=0, failed=1, deselected=2)
