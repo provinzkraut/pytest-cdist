@@ -36,7 +36,8 @@ dev = [
     "mypy>=1.14.0",
     "pre-commit>=3.5",
     "typing-extensions>=4.12.2",
-    "pytest-randomly>=3.15",
+    "pytest-randomly==3.15.0; python_version=='3.8'",
+    "pytest-randomly>=3.16; python_version>='3.9'",
 ]
 
 [project.entry-points.pytest11]
