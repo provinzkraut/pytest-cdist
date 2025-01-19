@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 
 import pytest
 
@@ -209,6 +210,7 @@ def test_steal(
     result.assert_outcomes(passed=3, deselected=1)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="incompatible with 3.8")
 def test_raises_for_invalid_randomly_cfg(pytester: pytest.Pytester) -> None:
     pytester.makeini("")
 
@@ -220,6 +222,7 @@ def test_raises_for_invalid_randomly_cfg(pytester: pytest.Pytester) -> None:
 
 
 @pytest.mark.parametrize("i", range(10))
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="incompatible with 3.8")
 def test_randomly_with_seed(pytester: pytest.Pytester, i: int) -> None:
     pytester.makeini('[pytest]\naddopts="-p randomly"')
 
@@ -242,6 +245,7 @@ def test_randomly_with_seed(pytester: pytest.Pytester, i: int) -> None:
 
 
 @pytest.mark.parametrize("i", range(10))
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="incompatible with 3.8")
 def test_randomly_with_dont_reorganize(pytester: pytest.Pytester, i: int) -> None:
     pytester.makeini('[pytest]\naddopts="-p randomly"')
 
