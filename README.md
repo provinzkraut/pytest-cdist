@@ -49,7 +49,7 @@ Pytest-cdist comes with several CLI and pytest-ini options:
 | CLI                     | Ini                   | Allowed values                | Default |
 |-------------------------|-----------------------|-------------------------------|---------|
 | `--cdist-justify-items` | `cdist-justify-items` | `none`, `file`, `scope`       | `none`  |
-| `--cdist-group-steal`   | `--cdist-group-steal` | `<group number>:<percentage>` | -       |
+| `--cdist-group-steal`   | `cdist-group-steal` | `<group number>:<percentage>` | -       |
 | `--cdist-report`        | -                     | -                             | false   |
 | `--cdist-report-dir`    | `cdist-report-dir`    |                               | `.`     |
 
