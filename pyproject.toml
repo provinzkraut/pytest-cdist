@@ -1,6 +1,6 @@
 [project]
 name = "pytest-cdist"
-version = "0.3.0"
+version = "0.3.1"
 description = "A pytest plugin to split your test suite into multiple parts"
 authors = [
   { name = "Janek Nouvertné", email = "provinzkraut@posteo.de" },
