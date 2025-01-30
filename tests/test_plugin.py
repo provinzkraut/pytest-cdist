@@ -209,6 +209,32 @@ def test_steal(
     result.assert_outcomes(passed=3, deselected=1)
 
 
+def test_steal_with_justify(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    class TestFoo:
+        def test_one(self):
+            assert True
+
+        def test_two(self):
+            assert True
+    """)
+
+    # Stealing should never break the scope
+    result = pytester.runpytest(
+        "--cdist-group=1/2",
+        "--cdist-justify-items=scope",
+        "--cdist-group-steal=2:60",
+    )
+    result.assert_outcomes(passed=2, deselected=0)
+
+    result = pytester.runpytest(
+        "--cdist-group=2/2",
+        "--cdist-justify-items=scope",
+        "--cdist-group-steal=2:60",
+    )
+    result.assert_outcomes(passed=0, deselected=2)
+
+
 def test_raises_for_invalid_randomly_cfg(pytester: pytest.Pytester) -> None:
     pytester.makeini("")
 
