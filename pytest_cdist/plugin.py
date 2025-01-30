@@ -238,12 +238,6 @@ def pytest_collection_modifyitems(
 
     groups = _partition_list(items, cdist_config.total_groups)
 
-    if cdist_config.justify_items_strategy != "none":
-        groups = _justify_items(groups, strategy=cdist_config.justify_items_strategy)
-
-    if os.getenv("PYTEST_XDIST_WORKER"):
-        groups = _justify_xdist_groups(groups)
-
     if cdist_config.group_steal is not None:
         target_group, amount_to_steal = cdist_config.group_steal
         groups = _distribute_with_bias(
@@ -251,6 +245,12 @@ def pytest_collection_modifyitems(
             target=target_group,
             bias=amount_to_steal,
         )
+
+    if cdist_config.justify_items_strategy != "none":
+        groups = _justify_items(groups, strategy=cdist_config.justify_items_strategy)
+
+    if os.getenv("PYTEST_XDIST_WORKER"):
+        groups = _justify_xdist_groups(groups)
 
     new_items = groups.pop(cdist_config.current_group)
     deselect = [item for group in groups for item in group]
