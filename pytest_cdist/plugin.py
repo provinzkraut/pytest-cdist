@@ -5,6 +5,7 @@ import dataclasses
 import json
 import os
 import pathlib
+import re
 from typing import TypeVar, Literal, TYPE_CHECKING
 
 import pytest
@@ -42,24 +43,76 @@ def _get_item_file(item: pytest.Item) -> str:
     return item.nodeid.split("::", 1)[0]
 
 
+@dataclasses.dataclass(frozen=True)
+class GroupStealOpt:
+    source_group: int | None
+    target_group: int
+    amount: int
+
+    def __str__(self) -> str:
+        out = f"g{self.target_group}:{self.amount}"
+        if self.source_group:
+            out += f":g{self.source_group}"
+        return out
+
+
+def _distribute(
+    groups: list[list[pytest.Item]],
+    from_: int,
+    to: int,
+    amount: int,
+) -> None:
+    items = groups[from_]
+    num_items_to_move = max(0, min(len(items), (len(items) * amount) // 100))
+    items_to_move = items[:num_items_to_move]
+    groups[to].extend(items_to_move)
+    groups[from_] = items[num_items_to_move:]
+
+
 def _distribute_with_bias(
-    groups: list[list[pytest.Item]], target: int, bias: int
+    groups: list[list[pytest.Item]],
+    group_steal: GroupStealOpt,
 ) -> list[list[pytest.Item]]:
-    for i, lst in enumerate(groups):
-        if i != target:
-            num_items_to_move = max(0, min(len(lst), (len(lst) * bias) // 100))
-            items_to_move = lst[:num_items_to_move]
-            groups[target].extend(items_to_move)
-            groups[i] = lst[num_items_to_move:]
+    source_groups = (
+        [group_steal.source_group]
+        if group_steal.source_group is not None
+        else range(len(groups))
+    )
+    for source_group in source_groups:
+        if source_group != group_steal.target_group:
+            _distribute(
+                groups,
+                from_=source_group,
+                to=group_steal.target_group,
+                amount=group_steal.amount,
+            )
 
     return groups
 
 
-def _get_group_steal_opt(opt: str | None) -> tuple[int, int] | None:
+def _get_group_steal_opt(opt: str | None) -> list[GroupStealOpt]:
     if opt is None:
-        return None
-    target_group, amount_to_steal = opt.split(":")
-    return int(target_group) - 1, int(amount_to_steal)
+        return []
+
+    opts = []
+    for group_opt in opt.split(","):
+        match = re.match(r"g?(\d+):(\d+)(?::g?(\d+))?", group_opt.strip())
+        if match is None:
+            raise ValueError(f"Invalid group steal option: {group_opt!r}")
+        source_group: int | None = None
+        target_group = int(match.group(1)) - 1
+        amount_to_steal = int(match.group(2))
+        if source_group_match := match.group(3):
+            source_group = int(source_group_match) - 1
+
+        opts.append(
+            GroupStealOpt(
+                source_group=source_group,
+                target_group=target_group,
+                amount=amount_to_steal,
+            )
+        )
+    return opts
 
 
 def _justify_items(
@@ -113,12 +166,12 @@ def _justify_xdist_groups(groups: list[list[pytest.Item]]) -> list[list[pytest.I
     return groups
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class CdistConfig:
     current_group: int
     total_groups: int
     justify_items_strategy: JustifyItemsStrategy = "none"
-    group_steal: tuple[int, int] | None = None
+    group_steal: list[GroupStealOpt]
     write_report: bool = False
     report_dir: pathlib.Path = pathlib.Path(".")
 
@@ -132,9 +185,8 @@ class CdistConfig:
             opts.append(f"--cdist-justify-items={self.justify_items_strategy}")
 
         if self.group_steal and "cdist-group-steal" not in config.inicfg:
-            opts.append(
-                f"--cdist-group-steal={self.group_steal[0] + 1}:{self.group_steal[1]}"
-            )
+            steal_opt = ",".join(map(str, self.group_steal))
+            opts.append(f"--cdist-group-steal={steal_opt}")
 
         if self.write_report:
             opts.append("--cdist-report")
@@ -202,7 +254,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store",
         default=None,
         help="make a group steal a percentage of items from other groups. '1:30' would "
-        "make group 1 steal 30%% of items from all other groups)",
+        "make group 1 steal 30% of items from all other groups",
     )
 
     parser.addini("cdist-justify-items", help="justify items strategy", default="none")
@@ -238,12 +290,10 @@ def pytest_collection_modifyitems(
 
     groups = _partition_list(items, cdist_config.total_groups)
 
-    if cdist_config.group_steal is not None:
-        target_group, amount_to_steal = cdist_config.group_steal
+    for group_steal in cdist_config.group_steal:
         groups = _distribute_with_bias(
             groups,
-            target=target_group,
-            bias=amount_to_steal,
+            group_steal=group_steal,
         )
 
     if cdist_config.justify_items_strategy != "none":

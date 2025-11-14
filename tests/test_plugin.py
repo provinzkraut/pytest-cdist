@@ -209,6 +209,84 @@ def test_steal(
     result.assert_outcomes(passed=3, deselected=1)
 
 
+def test_steal_with_target(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    def test_one():
+        assert False
+
+    def test_two():
+        assert True
+
+    def test_three():
+        assert True
+
+    def test_four():
+        assert True
+    """)
+
+    # natural distribution would be
+    # 1: test_one, test_two
+    # 2: test_three
+    # 3: test_four
+    # telling group 3 to steal 50% of group 1 should result in
+    # 1: test_two
+    # 2: test_three
+    # 3: test_four, test_one
+    cli_opt = "--cdist-group-steal=g3:50:g1"
+    result = pytester.runpytest_inprocess("--cdist-group=1/3", cli_opt)
+    result.assert_outcomes(passed=1, deselected=3)
+
+    result = pytester.runpytest_inprocess("--cdist-group=2/3", cli_opt)
+    result.assert_outcomes(passed=1, deselected=3)
+
+    result = pytester.runpytest_inprocess("--cdist-group=3/3", cli_opt)
+    result.assert_outcomes(passed=1, failed=1, deselected=2)
+
+
+def test_steal_multiple_target(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+
+    def test_two():
+        assert True
+
+    def test_three():
+        assert True
+
+    def test_four():
+        assert True
+        
+    def test_five():
+        assert True
+        
+    def test_six():
+        assert True
+    """)
+
+    # natural distribution would be
+    # 1: 2
+    # 2: 2
+    # 3: 2
+    # first, we're telling group 2 to steal 50% of all other groups:
+    # 1: 1
+    # 2: 4
+    # 3: 1
+    # then, we're telling group 3 to steal 50% of group 2
+    # 1: 1
+    # 2: 2
+    # 3: 3
+    cli_opt = "--cdist-group-steal=g2:50,g3:50:g2"
+    result = pytester.runpytest("--cdist-group=1/3", cli_opt)
+    result.assert_outcomes(passed=1, deselected=5)
+
+    result = pytester.runpytest("--cdist-group=2/3", cli_opt)
+    result.assert_outcomes(passed=2, deselected=4)
+
+    result = pytester.runpytest("--cdist-group=3/3", cli_opt)
+    result.assert_outcomes(passed=3, deselected=3)
+
+
 def test_steal_with_justify(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     class TestFoo:
