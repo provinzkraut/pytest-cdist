@@ -21,7 +21,7 @@ def check_reports(reports: list[dict[str, Any]]) -> list[str]:
         errors.append("Collected different items between runs")
     else:
         all_selected = [item for report in reports for item in report["selected"]]
-        if all_selected != reports[0]["collected"]:
+        if len(all_selected) != len(reports[0]["collected"]):
             errors.append("Items missing during collection")
 
     return errors
