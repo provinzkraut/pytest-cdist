@@ -46,12 +46,12 @@ jobs:
 
 Pytest-cdist comes with several CLI and pytest-ini options:
 
-| CLI                     | Ini                   | Allowed values                | Default |
-|-------------------------|-----------------------|-------------------------------|---------|
-| `--cdist-justify-items` | `cdist-justify-items` | `none`, `file`, `scope`       | `none`  |
-| `--cdist-group-steal`   | `--cdist-group-steal` | `<group number>:<percentage>` | -       |
-| `--cdist-report`        | -                     | -                             | false   |
-| `--cdist-report-dir`    | `cdist-report-dir`    |                               | `.`     |
+| CLI                     | Ini                   | Allowed values                                                               | Default |
+|-------------------------|-----------------------|------------------------------------------------------------------------------|---------|
+| `--cdist-justify-items` | `cdist-justify-items` | `none`, `file`, `scope`                                                      | `none`  |
+| `--cdist-group-steal`   | `--cdist-group-steal` | `<target group>:<percentage>` / `<target group>:<percentage>:<source group>` | -       |
+| `--cdist-report`        | -                     | -                                                                            | false   |
+| `--cdist-report-dir`    | `cdist-report-dir`    |                                                                              | `.`     |
 
 
 ### Controlling how items are split up
@@ -95,6 +95,15 @@ cdist-group-steal=2:30
 ```bash
 pytest --cdist-group=1/2 --cdist-group-steal=2:30
 ```
+
+It is also possible to redistribute items between two specific groups, by specifying 
+both as source and a target group. The following configuration would assign 50% of the 
+items in group 1 to group 2:
+
+```bash
+pytest --cdist-group=1/3 --cdist-group-steal=1:50:2
+```
+
 
 ### With pytest-xdist
 
