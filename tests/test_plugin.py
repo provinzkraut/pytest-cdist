@@ -5,6 +5,19 @@ import json
 import pytest
 
 
+def test_disable_on_one_group(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+    def test_one():
+        assert True
+
+    def test_two():
+        assert True
+    """)
+
+    result = pytester.runpytest("--cdist-group=1/1")
+    result.assert_outcomes(passed=2, deselected=0)
+
+
 def test_split_simple(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     def test_one():

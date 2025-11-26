@@ -288,6 +288,9 @@ def pytest_collection_modifyitems(
     if cdist_config is None:
         return
 
+    if cdist_config.total_groups == 1:
+        return
+
     groups = _partition_list(items, cdist_config.total_groups)
 
     for group_steal in cdist_config.group_steal:
