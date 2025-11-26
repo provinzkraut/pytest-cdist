@@ -5,7 +5,6 @@ import json
 import pytest
 
 
-
 def test_disable_on_one_group(pytester: pytest.Pytester) -> None:
     pytester.makepyfile("""
     def test_one():
