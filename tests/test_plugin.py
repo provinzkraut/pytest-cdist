@@ -382,3 +382,8 @@ def test_randomly_with_dont_reorganize(pytester: pytest.Pytester, i: int) -> Non
         "--cdist-group=2/2", "--randomly-dont-reorganize"
     )
     result.assert_outcomes(passed=0, failed=1, deselected=2)
+
+
+# check for https://github.com/provinzkraut/pytest-cdist/issues/12
+def test_help(pytester: pytest.Pytester) -> None:
+    pytester.runpytest("--help")
