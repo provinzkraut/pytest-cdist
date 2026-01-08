@@ -254,7 +254,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store",
         default=None,
         help="make a group steal a percentage of items from other groups. '1:30' would "
-        "make group 1 steal 30% of items from all other groups",
+        "make group 1 steal 30%% of items from all other groups",
     )
 
     parser.addini("cdist-justify-items", help="justify items strategy", default="none")
