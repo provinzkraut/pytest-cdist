@@ -178,22 +178,20 @@ class CdistConfig:
     def cli_options(self, config: pytest.Config) -> str:
         opts = [f"--cdist-group={self.current_group + 1}/{self.total_groups}"]
 
-        if (
-            self.justify_items_strategy != "none"
-            and "cdist-justify-items" not in config.inicfg
+        if self.justify_items_strategy != "none" and not config.getini(
+            "cdist-justify-items"
         ):
             opts.append(f"--cdist-justify-items={self.justify_items_strategy}")
 
-        if self.group_steal and "cdist-group-steal" not in config.inicfg:
+        if self.group_steal and not config.getini("cdist-group-steal"):
             steal_opt = ",".join(map(str, self.group_steal))
             opts.append(f"--cdist-group-steal={steal_opt}")
 
         if self.write_report:
             opts.append("--cdist-report")
 
-        if (
-            self.report_dir != pathlib.Path(".")
-            and "cdist-report-dir" not in config.inicfg
+        if self.report_dir != pathlib.Path(".") and not config.getini(
+            "cdist-report-dir"
         ):
             opts.append(f"--cdist-report-dir={str(self.report_dir)}")
 
